@@ -1,0 +1,31 @@
+
+    model{
+    # Priors
+    
+    alpha ~ dnorm(0, 0.001)	              # intercept
+    beta ~ dnorm(0, 0.001)								# slope
+    
+    shape ~ dunif(0, 250)                 # Shape to describe the variance of random variable in linear predictor
+    shape.gc.m ~ dnorm(180, 1/ (30*30))		# Informed prior from previous laboratory analyses
+    tau.grain <- 1/(0.5 * 0.5)						# Informed prior denoting the precision for the count model. Where did you get the data?
+    
+    for (i in 1:n){
+    
+    # nGrains model
+    nGrains[i] ~ dnorm(pCount[i], tau.grain )
+    
+    # Expectation/ process model
+    mu[i] <- alpha + beta * uv[i]
+    
+    mu.ratio[i] ~ dgamma(shape, shape/ exp(mu[i])) # the random variable
+    
+    # Multiply by the number of grains
+    ratio.nGrains[i] <- mu.ratio[i] * round(nGrains[i]) 
+    
+    # Feed process model into machine uncertainty model
+    ratio[i] ~ dgamma(shape.gc.m, shape.gc.m / ratio.nGrains[i])		
+    }	
+}
+
+    
+    
